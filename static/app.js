@@ -373,7 +373,7 @@ function mailRow(m) {
         pinned && h("span", { class: "tag", text: "Pinned" })),
       h("a", {
         class: "subject",
-        href: `https://mail.google.com/mail/u/0/#inbox/${m.id}`,
+        href: `https://mail.google.com/mail/u/1/#inbox/${m.id}`,
         target: "_blank",
         rel: "noopener",
         onclick: (e) => e.stopPropagation(),
