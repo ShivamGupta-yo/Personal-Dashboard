@@ -1,0 +1,14 @@
+# Python environment & cache
+__pycache__/
+venv/
+
+# Secrets, API credentials, and Configs (CRITICAL)
+.env
+credentials.json
+token.json
+config.json
+.spotify_cache
+
+# Local Databases
+*.sqlite3
+*.db

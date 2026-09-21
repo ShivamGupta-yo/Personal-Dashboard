@@ -1,0 +1,284 @@
+<!doctype html>
+
+<!--
+  Morning brief: page structure.
+
+  This file only contains the skeleton. The empty containers (mailList, newsList, weather, ...) are filled in by
+  app.js, and everything is styled by style.css. Sections appear in the same order as on the screen:
+
+    1. Side drawer (Quick Links)
+    2. Header: menu button, greeting, clock, date, weather, tools
+    3. Demo banner and summary sentence
+    4. Main column: mail, news, papers, read later
+    5. Side rail: Spotify, focus timer, today's events, tasks
+    6. Toast message, "Push to Calendar" dialog, footer
+-->
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Shivam-Dashboard</title>
+
+  <!-- Tab icon (an emoji drawn as an inline SVG) -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
+
+  <!-- Fonts: Bricolage Grotesque for headings, Source Sans 3 for text (Google Fonts) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Source+Sans+3:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="/style.css">
+</head>
+
+<body>
+
+  <!-- ==================================================================== -->
+  <!-- 1. SIDE DRAWER (Quick Links)                                        -->
+  <!--    Slides in from the left when the menu button in the header is      -->
+  <!--    pressed. Add or remove shortcuts by editing the <a> lines below.   -->
+  <!-- ==================================================================== -->
+  <div id="sideDrawer" class="side-drawer">
+    <div class="drawer-head">
+      <strong>Quick Links</strong>
+    </div>
+    <nav class="drawer-links">
+      <a href="https://claude.ai/project/01a01986-c3bf-7471-a99c-3905f23c12d7" target="_blank" rel="noopener">Claude</a>
+      <a href="https://chatgpt.com/" target="_blank" rel="noopener">ChatGPT</a>
+      <a href="https://notebook.google.com/" target="_blank" rel="noopener">Google Notebook</a>
+      <a href="https://github.com/ShivamGupta-yo" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://www.linkedin.com/feed/" target="_blank" rel="noopener">LinkedIn</a>
+      <a href="https://www.overleaf.com/project" target="_blank" rel="noopener">Overleaf</a>
+      <a href="https://scholar.google.com/" target="_blank" rel="noopener">Google Scholar</a>
+      <a href="https://www.youtube.com/" target="_blank" rel="noopener">YouTube</a>
+      <a href="https://classroom.google.com/u/1/h/st" target="_blank" rel="noopener">Google Classroom</a>
+      <a href="https://open.spotify.com/?flow_ctx=f56f6b9e-ed83-4a5e-9384-0ae3cb00ca72%3A1785508948" target="_blank" rel="noopener">Spotify</a>
+      <!-- The red link: style.css picks it out by "gemini.google.com" in its address -->
+      <a href="https://gemini.google.com/app/b10a62a2556ddb75" target="_blank" rel="noopener">Dashboard-Gemini</a>
+    </nav>
+  </div>
+
+
+  <!-- ==================================================================== -->
+  <!-- 2. HEADER                                                            -->
+  <!--    Left column: menu button + greeting + clock, then the date.        -->
+  <!--    Right column: weather and the Refresh / theme buttons.             -->
+  <!-- ==================================================================== -->
+  <header class="wrap masthead">
+    <div>
+      <!-- Flex wrapper keeps the menu, greeting, and clock on the same line -->
+      <div style="display: flex; align-items: center; gap: 1rem;">
+        <!-- Menu button: opens the side drawer and turns into an X (see start() in app.js) -->
+        <button id="menuToggle" aria-label="Open Menu">
+          <div class="burger-icon">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+        </button>
+        <!-- Greeting: click it to see the next language (app.js: showGreeting / fitGreeting) -->
+        <h1><button id="greeting" class="greeting-btn" type="button" title="Click for another language">Good morning</button></h1>
+        
+        <!-- Minimalist Digital Clock -->
+        <div id="digitalClock" class="clock"></div>
+      </div>
+      <p id="dateline" class="dateline"></p>
+    </div>
+
+    <div class="masthead-side">
+      <!-- Filled by loadWeather() -->
+      <div id="weather" class="weather" aria-live="polite"></div>
+      <div class="tools">
+        <span id="updated" class="muted"></span>
+        <button id="refresh" class="btn" type="button">Refresh</button>
+        <button id="theme" class="btn" type="button">Dark mode</button>
+      </div>
+    </div>
+  </header>
+
+
+  <!-- ==================================================================== -->
+  <!-- 3. DEMO BANNER AND SUMMARY SENTENCE                                   -->
+  <!-- ==================================================================== -->
+
+  <!-- Only shown when the server runs in demo mode (python app.py --demo) -->
+  <p id="demo" class="wrap demo" hidden>Demo mode: everything below is sample data. Start the app without --demo to see your own.</p>
+
+  <!-- One-sentence overview, rebuilt by updateSummary() -->
+  <div class="wrap"><p id="summary" class="summary" aria-live="polite">Gathering your brief…</p></div>
+
+
+  <div class="wrap layout">
+
+    <!-- ================================================================== -->
+    <!-- 4. MAIN COLUMN                                                      -->
+    <!-- ================================================================== -->
+    <main>
+
+      <!-- Mail: tabs Important / All (counts filled by app.js), list, and a note under the list -->
+      <section class="block" aria-labelledby="mailTitle">
+        <header class="block-head">
+          <h2 id="mailTitle">Mail</h2>
+          <div id="mailControls" class="controls" hidden>
+            <button class="chip" type="button" data-mail-mode="important" aria-pressed="true">Important <span id="mailCountImportant"></span></button>
+            <button class="chip" type="button" data-mail-mode="all" aria-pressed="false">All <span id="mailCountAll"></span></button>
+          </div>
+        </header>
+        <div id="mailList"></div>
+        <p id="mailFoot" class="foot muted"></p>
+      </section>
+
+      <!-- News: category tabs are created by app.js -->
+      <section class="block" aria-labelledby="newsTitle">
+        <header class="block-head">
+          <h2 id="newsTitle">Top 10 news</h2>
+          <div id="newsTabs" class="controls" role="group" aria-label="News category"></div>
+        </header>
+        <div id="newsList"></div>
+        <p id="newsFoot" class="foot muted"></p>
+      </section>
+
+      <!-- Latest papers on your research topics (arXiv) -->
+      <section class="block" aria-labelledby="papersTitle">
+        <header class="block-head">
+          <h2 id="papersTitle">New papers</h2>
+        </header>
+        <div id="papersList"></div>
+        <p id="papersFoot" class="foot muted"></p>
+      </section>
+
+      <!-- Links saved with the Save buttons of news stories and papers -->
+      <section class="block" aria-labelledby="savedTitle">
+        <header class="block-head">
+          <h2 id="savedTitle">Read later</h2>
+        </header>
+        <div id="savedList"></div>
+      </section>
+
+    </main>
+
+
+    <!-- ================================================================== -->
+    <!-- 5. SIDE RAIL                                                        -->
+    <!-- ================================================================== -->
+    <aside class="rail" aria-label="Focus, schedule and tasks">
+
+      <!-- Spotify: what is playing, with previous / play-pause / next (hidden if Spotify is off in config.json) -->
+      <section class="rail-block spotify-block" aria-labelledby="spotifyTitle">
+        <div class="spotify-header">
+          <h2 id="spotifyTitle">Now Playing</h2>
+          <span id="spotifyStatusDot" class="status-dot"></span>
+        </div>
+        <div id="spotifyWidget" class="spotify-card">
+          <div class="spotify-empty muted small">Connecting to Spotify…</div>
+        </div>
+      </section>
+
+      <!-- Focus timer: progress ring, label for the session, buttons, session dots, adjustable lengths -->
+      <section class="rail-block" aria-labelledby="focusTitle">
+        <h2 id="focusTitle">Focus</h2>
+        <div class="ring" id="ring" data-mode="focus">
+          <svg viewBox="0 0 120 120" aria-hidden="true">
+            <circle class="track" cx="60" cy="60" r="52"></circle>
+            <circle class="progress" id="ringProgress" cx="60" cy="60" r="52" transform="rotate(-90 60 60)"></circle>
+          </svg>
+          <div class="ring-text">
+            <span id="timerMode" class="ring-mode">Focus</span>
+            <strong id="timerTime" class="ring-time">25:00</strong>
+          </div>
+        </div>
+        <label class="sr-only" for="timerLabel">What are you working on?</label>
+        <input id="timerLabel" class="field" type="text" maxlength="80" placeholder="What are you working on?">
+        <div class="timer-actions">
+          <button id="timerToggle" class="btn primary" type="button">Start</button>
+          <button id="timerReset" class="btn" type="button">Reset</button>
+          <button id="timerSkip" class="btn" type="button">Skip</button>
+        </div>
+        <div id="timerDots" class="dots" aria-hidden="true"></div>
+        <p id="timerStats" class="muted small"></p>
+        <details class="small">
+          <summary>Timer lengths</summary>
+          <div class="lengths">
+            <label>Focus <input id="lenFocus" class="field num" type="number" min="1" max="120"> min</label>
+            <label>Short break <input id="lenShort" class="field num" type="number" min="1" max="60"> min</label>
+            <label>Long break <input id="lenLong" class="field num" type="number" min="1" max="90"> min</label>
+          </div>
+        </details>
+      </section>
+
+      <!-- Today: Google Calendar events for today (filled by loadEvents) -->
+      <section class="rail-block" aria-labelledby="eventsTitle">
+        <h2 id="eventsTitle">Today</h2>
+        <div id="eventsList"></div>
+      </section>
+
+      <!-- Tasks: add a task (optional due date), list, and "Clear finished tasks" -->
+      <section class="rail-block" aria-labelledby="tasksTitle">
+        <h2 id="tasksTitle">Tasks</h2>
+        <div class="task-add">
+          <label class="sr-only" for="taskTitle">New task</label>
+          <input id="taskTitle" class="field" type="text" maxlength="200" placeholder="Add a task">
+          <label class="sr-only" for="taskDue">Due date</label>
+          <input id="taskDue" class="field date" type="date">
+          <button id="taskAdd" class="btn" type="button">Add</button>
+        </div>
+        <ul id="tasksList" class="tasks"></ul>
+        <button id="tasksClear" class="link small" type="button" hidden>Clear finished tasks</button>
+      </section>
+
+    </aside>
+  </div>
+
+
+  <!-- ==================================================================== -->
+  <!-- 6. TOAST, DIALOG AND FOOTER                                           -->
+  <!-- ==================================================================== -->
+
+  <!-- Short messages at the bottom of the screen (shown by toast() in app.js) -->
+  <div id="toast" class="toast" role="status" hidden></div>
+
+  <!-- Calendar push dialog: opened by the "To Calendar" button of a task -->
+  <dialog id="calendarModal" class="modal">
+    <div class="modal-content">
+      <h3 id="calendarModalTitle" class="modal-header">Push to Calendar</h3>
+      <p id="calendarModalTask" class="muted small" style="margin-top: 0; margin-bottom: 1.5rem;"></p>
+
+      <div class="modal-grid">
+        <div>
+          <label for="calStart" class="small">Start Time (Optional)</label>
+          <input id="calStart" type="time" class="field">
+        </div>
+
+        <div>
+          <label for="calEnd" class="small">End Time (Optional)</label>
+          <input id="calEnd" type="time" class="field">
+        </div>
+
+        <div style="grid-column: 1 / -1;">
+          <label for="calRecurrence" class="small">Repeat</label>
+          <select id="calRecurrence" class="field">
+            <option value="">Does not repeat</option>
+            <option value="daily">Daily</option>
+            <option value="weekly">Weekly</option>
+            <option value="monthly">Monthly</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="modal-actions" style="margin-top: 1.5rem; display: flex; gap: 0.5rem; justify-content: flex-end;">
+        <button id="calCancel" class="btn" type="button">Cancel</button>
+        <button id="calConfirm" class="btn primary" type="button">Push to Calendar</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Minimalistic footer -->
+  <footer class="wrap" style="text-align: center; padding: 2rem 0; font-size: 0.85em; color: var(--muted, #888);">
+    Shivam Gupta &lt;/&gt;
+  </footer>
+
+  <!-- The dashboard code. "?v=999" is only there so the browser reloads the file instead of using an old copy -->
+  <script src="/app.js?v=999"></script>
+</body>
+
+</html>

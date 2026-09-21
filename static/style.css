@@ -1,0 +1,1384 @@
+/* ==========================================================================
+   MORNING BRIEF: STYLESHEET
+   --------------------------------------------------------------------------
+   Sections follow the page from top to bottom:
+
+    1. DESIGN TOKENS                     Colors and fonts (light and dark theme)
+    2. BASE                              Page defaults and helper classes
+    3. SHARED COMPONENTS                 Buttons, chips, links, form fields, panel parts
+    4. SIDE DRAWER (QUICK LINKS)         Quick Links drawer and the menu button
+    5. HEADER                            Greeting, date, weather, tools, summary sentence
+    6. PAGE LAYOUT                       The grid under the header
+    7. MAIN COLUMN                       Mail, news, papers, read later
+    8. SIDE RAIL                         Sticky right column: Spotify, focus timer, today, tasks
+    9. TOAST AND DIALOG                  Message pop-up and Push to Calendar dialog
+   10. FOOTER                            Footer text
+   11. SMALL SCREENS AND REDUCED MOTION  Responsive rules and reduced motion (kept last so they win)
+   ========================================================================== */
+
+
+/* ==========================================================================
+   1. DESIGN TOKENS
+   Colors and fonts, used everywhere else through var(--name). Change a color here and it changes everywhere.
+   ========================================================================== */
+
+/* Palette: indigo-dye blue-grey paper, ink navy, indigo for mail, marigold for "needs you now", teal for calm/break. */
+:root {
+  --paper: #F2F5F8;
+  --panel: #E6ECF2;
+  --ink: #101B33;
+  --muted: #56627C;
+  --line: #D2DAE5;
+  --indigo: #2F3FBF;
+  --indigo-soft: #DCE0F7;
+  --marigold: #E5A100;
+  --marigold-ink: #1B1400;
+  --teal: #14766A;
+  --danger: #B3261E;
+  --gutter: clamp(1rem, 4vw, 3rem);
+  --display: "Bricolage Grotesque", "Noto Sans Devanagari", "Noto Sans Thai", "Nirmala UI", "Leelawadee UI", system-ui, sans-serif;
+  --body: "Source Sans 3", "Segoe UI", system-ui, "Noto Sans Devanagari", "Noto Sans Thai", sans-serif;
+  color-scheme: light;
+}
+
+/* Dark theme, part 1: follows the operating system, unless the user chose light with the theme button. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #0E1424;
+    --panel: #162038;
+    --ink: #E8ECF6;
+    --muted: #9AA6C0;
+    --line: #27314B;
+    --indigo: #93A0FF;
+    --indigo-soft: #232A5C;
+    --marigold: #F2B632;
+    --teal: #4FC3B0;
+    --danger: #FF8A80;
+    color-scheme: dark;
+  }
+}
+
+/* Dark theme, part 2: chosen with the theme button (which sets data-theme="dark" on <html>). */
+:root[data-theme="dark"] {
+  --paper: #0E1424;
+  --panel: #162038;
+  --ink: #E8ECF6;
+  --muted: #9AA6C0;
+  --line: #27314B;
+  --indigo: #93A0FF;
+  --indigo-soft: #232A5C;
+  --marigold: #F2B632;
+  --teal: #4FC3B0;
+  --danger: #FF8A80;
+  color-scheme: dark;
+}
+
+
+/* ==========================================================================
+   2. BASE
+   Page defaults and small helper classes.
+   ========================================================================== */
+
+/* Padding and borders count inside an element's width and height. */
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--body);
+  font-size: 1.0625rem;
+  line-height: 1.5;
+}
+
+/* Links look like the text around them unless a class says otherwise. */
+a { color: inherit; }
+
+/* Visible outline when moving around with the keyboard. */
+:focus-visible {
+  outline: 2px solid var(--indigo);
+  outline-offset: 2px;
+}
+
+/* Helper classes: .muted = grey text, .small = smaller text. */
+.muted { color: var(--muted); }
+.small { font-size: 0.9rem; }
+
+/* Hidden on screen but still read aloud by screen readers (used for input labels). */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* The centered page column. Header, summary, layout and footer all use it. */
+.wrap {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding-left: var(--gutter);
+  padding-right: var(--gutter);
+}
+
+
+/* ==========================================================================
+   3. SHARED COMPONENTS
+   Buttons, chips, links, form fields and the building blocks of the main-column panels.
+   ========================================================================== */
+
+/* --- Buttons --------------------------------------------------------- */
+/* The three kinds of buttons share the same font, color and pointer cursor. */
+.btn,
+.chip,
+.link {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+.btn {
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0.3rem 0.95rem;
+  font-weight: 500;
+  transition: all 0.2s ease;  /* Smooth hover */
+}
+
+/* Secondary buttons (Reset, Skip) */
+.btn:hover {
+  border-color: var(--muted);
+  background: var(--panel);
+}
+
+.btn:active {
+  transform: scale(0.96);  /* Satisfying click press */
+}
+
+/* Primary Button (Start) */
+.btn.primary {
+  background: var(--marigold);
+  color: var(--marigold-ink);
+  border-color: transparent;
+  font-weight: 600;
+  padding: 0.4rem 1.4rem;
+}
+
+.btn.primary:hover {
+  background: var(--marigold);
+  filter: brightness(0.94);
+  transform: translateY(-1px);  /* Slight lift on hover */
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.btn.primary:active {
+  transform: scale(0.96) translateY(0);  /* Presses down when clicked */
+}
+
+/* --- Chips ----------------------------------------------------------- */
+.chip {
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0.15rem 0.8rem;
+  font-size: 0.95rem;
+}
+
+.chip[aria-pressed="true"] {
+  background: var(--indigo-soft);
+  border-color: transparent;
+  color: var(--indigo);
+  font-weight: 600;
+}
+
+.chip span {
+  font-variant-numeric: tabular-nums;
+  opacity: 0.8;
+}
+
+/* --- Text buttons ---------------------------------------------------- */
+.link {
+  background: none;
+  border: 0;
+  padding: 0.1rem 0.25rem;
+  color: var(--indigo);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.link:disabled {
+  color: var(--muted);
+  text-decoration: none;
+  cursor: default;
+}
+
+/* Modern action links (Pin, Done, Save, Remove, Abstract, Delete) */
+.row-actions .link,
+.paper-actions .link,
+ol.news > li > button.link,
+.saved-row button.link,
+.task button.link {
+  text-decoration: none;
+  opacity: 0.65;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  font-weight: 500;
+}
+
+.row-actions .link:hover,
+.paper-actions .link:hover,
+ol.news > li > button.link:hover,
+.saved-row button.link:hover,
+.task button.link:hover {
+  opacity: 1;
+  background: var(--panel);
+  text-decoration: none;
+}
+
+/* --- Form fields ----------------------------------------------------- */
+/* Text boxes, date and time inputs, drop-downs. */
+.field {
+  font: inherit;
+  color: inherit;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 0.4rem 0.6rem;
+  width: 100%;
+  /* Universal smooth transition for all inputs */
+  transition: box-shadow 0.3s ease, border-color 0.3s ease, background-color 0.3s ease;
+}
+
+.field.num {
+  width: 4.2rem;
+  padding: 0.2rem 0.4rem;
+  text-align: center;  /* Centers the numbers cleanly */
+}
+
+.field.date { width: auto; }
+
+/* Smooth minimal focus applied to EVERYTHING */
+.field:focus,
+.field:focus-visible {
+  outline: none;
+  border-color: transparent;
+  background-color: var(--panel);
+  box-shadow: 0 0 0 2px var(--indigo-soft);
+}
+
+/* Smooth minimal focus for text inputs */
+/* Smooth minimal focus for text inputs. Repeats the rules above for these two inputs; harmless. */
+#timerLabel,
+#taskTitle {
+  transition: box-shadow 0.3s ease, border-color 0.3s ease, background-color 0.3s ease;
+}
+
+#timerLabel:focus,
+#timerLabel:focus-visible,
+#taskTitle:focus,
+#taskTitle:focus-visible {
+  outline: none;
+  border-color: transparent;
+  background-color: var(--panel);
+  box-shadow: 0 0 0 2px var(--indigo-soft);
+}
+
+/* --- Panel building blocks ------------------------------------------- */
+/* One panel of the main column (Mail, News, Papers, Read later). */
+.block {
+  padding: 1.4rem 0 1.8rem;
+  border-top: 1px solid var(--line);
+}
+
+/* Panel title row: heading on the left, tabs on the right. */
+.block-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.6rem;
+}
+
+.block-head h2,
+.rail h2 {
+  margin: 0;
+  font-family: var(--display);
+  font-weight: 600;
+  font-size: 1.4rem;
+  letter-spacing: -0.01em;
+}
+
+/* A row of small buttons or tabs. */
+.controls {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+/* Small grey note under a list. */
+.foot {
+  margin: 0.75rem 0 0;
+  font-size: 0.9rem;
+}
+
+/* "Nothing here" message. */
+.empty { margin: 0.5rem 0; }
+
+/* Setup and error messages that replace a panel's content (see panelStatus() in app.js). */
+.note {
+  background: var(--panel);
+  border-radius: 8px;
+  padding: 0.8rem 1rem;
+  max-width: 40rem;
+}
+
+.note p { margin: 0 0 0.4rem; }
+.note.error p:first-child { color: var(--danger); }
+
+
+/* ==========================================================================
+   4. SIDE DRAWER (QUICK LINKS)
+   The drawer that slides in from the left, and the menu (hamburger) button that opens it.
+   ========================================================================== */
+
+/* The panel that slides in from the left. It sits off-screen (left: -300px) until app.js adds .open. */
+.side-drawer {
+  position: fixed;
+  top: 0;
+  left: -300px;
+  width: 250px;
+  height: 100vh;
+  background: var(--panel);
+  border-right: 1px solid var(--line);
+  box-shadow: 4px 0 15px rgba(0, 0, 0, 0.1);
+  transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 1000;
+  padding: 20px;  /* Restored clean padding */
+  display: flex;
+  flex-direction: column;
+}
+
+.side-drawer.open { left: 0; }
+
+/* Title row of the drawer. */
+.drawer-head {
+  display: flex;
+  justify-content: flex-start;  /* Pushes Quick Links to the left */
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--line);
+  color: var(--ink);
+  min-height: 34px;  /* Matches the button height for horizontal alignment */
+}
+
+/* The list of links. */
+.drawer-links {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Each link is drawn as a small button. */
+.drawer-links a {
+  padding: 10px 12px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  text-decoration: none;
+  color: var(--ink);
+  font-size: 0.9em;
+  transition: background 0.2s;
+}
+
+.drawer-links a:hover { background: var(--line); }
+
+/* Special styling for the Gemini Development link (picked out by its address). */
+.drawer-links a[href*="gemini.google.com"] {
+  background-color: #dc3545 !important;  /* Solid striking red regardless of theme */
+  color: #ffffff !important;  /* Crisp white text for perfect contrast */
+  border-color: #dc3545 !important;
+  font-weight: 600;
+}
+
+.drawer-links a[href*="gemini.google.com"]:hover {
+  background-color: #b02a37 !important;  /* Slightly darker red on hover */
+  border-color: #b02a37 !important;
+}
+
+/* --- Menu button ----------------------------------------------------- */
+/* The menu (hamburger) button in the header. */
+#menuToggle {
+  text-decoration: none;
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 6px;
+  transition: background-color 0.2s ease, color 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 1001;
+  flex-shrink: 0;  /* keeps its shape when the greeting is long */
+}
+
+#menuToggle:hover {
+  background: var(--panel);
+  color: var(--ink);
+}
+
+/* --- Hamburger icon (turns into an X when the drawer is open) -------- */
+/* Icon box; the three lines are absolutely positioned inside it. */
+.burger-icon {
+  width: 18px;
+  height: 14px;
+  position: relative;
+}
+
+.burger-icon span {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background-color: currentColor;
+  border-radius: 2px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Position the 3 individual lines */
+.burger-icon span:nth-child(1) { top: 0; }
+.burger-icon span:nth-child(2) { top: 6px; }
+.burger-icon span:nth-child(3) { top: 12px; }
+
+/* Turns into a Cross (X) when the drawer is OPEN */
+.burger-icon.open span:nth-child(1) { transform: translateY(6px) rotate(45deg); }
+.burger-icon.open span:nth-child(2) { opacity: 0; }
+.burger-icon.open span:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
+
+/* Keep the cross fixed to the screen when the menu is open */
+#menuToggle.open {
+  position: fixed;
+  top: 15px;
+  left: 195px;  /* Aligns horizontally on the right side of the open drawer */
+  z-index: 1002;
+}
+
+/* Add a 50px invisible spacer when the button is pulled out of normal flow */
+#menuToggle.open + h1 { margin-left: 50px; }
+
+
+/* ==========================================================================
+   5. HEADER
+   Greeting, date, weather, tools, demo banner and the summary sentence.
+   ========================================================================== */
+
+/* How the top of the page stays still:
+   1. The greeting row has a FIXED height and the greeting never wraps.
+   2. A long greeting gets a smaller font instead of a second line (see --fit below).
+   So clicking through languages cannot move the date line, the weather, or anything under them. */
+.masthead {
+  --greeting-max: 4.25rem;  /* biggest the greeting is ever allowed to be */
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;  /* greeting gets what is left, weather keeps its own width */
+  gap: 1.5rem;
+  align-items: end;
+  padding-top: 2.5rem;
+}
+
+/* Lets the greeting column shrink instead of pushing the weather. */
+.masthead > * { min-width: 0; }
+
+/* the row that holds the menu button and the greeting */
+/* The row that holds the menu button and the greeting. */
+.masthead :has(> #menuToggle) {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+/* The greeting's row: fixed height so the page never jumps when the greeting changes. */
+.masthead h1 {
+  margin: 0;
+  flex: 1 1 0;
+  min-width: 0;
+  height: calc(var(--greeting-max) * 1.45);  /* room for the biggest greeting (line-height 1.35 + 0.1em padding) */
+  display: flex;
+  align-items: center;  /* smaller text stays centred inside the same box */
+  container-type: inline-size;  /* lets the greeting measure its own room (cqw units) */
+}
+
+/* The greeting text (it is a button: click it for another language). */
+.greeting-btn {
+  all: unset;
+  display: block;
+  flex: 1 1 0;
+  min-width: 0;
+  cursor: pointer;
+  font-family: var(--display);
+  font-weight: 700;
+  /* --fit = how many "em" wide the longest greeting of this language is (name included).
+     Font size = available width / --fit, but never bigger than --greeting-max. */
+  --fit: 14;
+  font-size: max(1.25rem, min(var(--greeting-max), calc(100cqw / var(--fit))));
+  line-height: 1.35;  /* keeps the bottoms of Hindi/Thai letters from being cut off */
+  padding-bottom: 0.1em;
+  letter-spacing: -0.02em;
+  transition: opacity 0.14s ease, transform 0.14s ease;
+  white-space: nowrap;  /* one line, always */
+  overflow: hidden;
+  text-overflow: ellipsis;  /* safety net: "…" instead of overlapping the weather */
+}
+
+/* Per-language --fit values, measured with the real fonts: the widest greeting of that language
+   (morning, afternoon or evening, plus ", Name") plus a few percent of safety margin.
+   A language that is not listed here falls back to the safe default of 14 above. */
+.greeting-btn:lang(en) { --fit: 11.3; }
+.greeting-btn:lang(ms) { --fit: 11.3; }
+.greeting-btn:lang(vi) { --fit: 11.3; }
+.greeting-btn:lang(hi) { --fit: 8.2; }
+.greeting-btn:lang(th) { --fit: 10.2; }
+.greeting-btn:lang(ja) { --fit: 13.5; }
+
+/* Fade-out state used while the greeting changes. */
+.greeting-btn.swap {
+  opacity: 0;
+  transform: translateY(5px);
+}
+
+/* Focus ring for the greeting button. */
+.greeting-btn:focus-visible {
+  outline: 3px solid var(--indigo);
+  outline-offset: 6px;
+  border-radius: 6px;
+}
+
+/* Date under the greeting. */
+.dateline {
+  margin: 0.5rem 0 0;
+  color: var(--muted);
+  font-size: 1.1rem;
+}
+
+/* Right column of the header: weather on top, tools underneath. */
+.masthead-side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1rem;
+  text-align: right;
+}
+
+/* Weather is a grid (not a wrapping flex row) so its column is exactly as wide as its widest line.
+   With flex-wrap the browser reserved room for everything on ONE line (about 150px too much),
+   which squeezed the greeting. The 1fr column pushes "26° Clear sky" to the right edge, as before. */
+.weather {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 0.75rem;
+  align-items: baseline;
+}
+
+.weather .temp {
+  grid-column: 2;
+  font-family: var(--display);
+  font-size: 2.6rem;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.weather .wx-desc {
+  grid-column: 3;
+  font-weight: 600;
+}
+
+.weather .wx-more {
+  grid-column: 1 / -1;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+/* Row with "Updated", Refresh and the theme button. */
+.tools {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+/* Demo banner (only visible when the server runs with --demo). */
+.demo {
+  margin-top: 1rem;
+  margin-bottom: 0;
+  color: var(--marigold-ink);
+}
+
+.demo:not([hidden]) {
+  background: var(--marigold);
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+  max-width: none;
+}
+
+/* The one-sentence summary under the header. */
+.summary {
+  margin: 1.25rem 0 0;
+  max-width: 40rem;
+  font-size: 1.3rem;
+  line-height: 1.4;
+}
+
+
+/* ==========================================================================
+   6. PAGE LAYOUT
+   The grid under the header.
+   ========================================================================== */
+
+/* Two columns: main column on the left, side rail (21.5rem wide) on the right. One column below 900px (see the last section). */
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 21.5rem;
+  gap: 3rem;
+  margin-top: 1.5rem;
+  padding-bottom: 4rem;
+  align-items: start;
+}
+
+
+/* ==========================================================================
+   7. MAIN COLUMN
+   Mail, news, papers, read later.
+   ========================================================================== */
+
+/* --- Mail ------------------------------------------------------------ */
+/* One mail: color bar | text | actions. */
+.mail-row {
+  display: grid;
+  grid-template-columns: 4px minmax(0, 1fr) auto;
+  gap: 0.9rem;
+  padding: 0.85rem 0;
+  border-top: 1px solid var(--line);
+  cursor: pointer;
+}
+
+.mail-row:first-child { border-top: 0; }
+
+/* Left bar: grey = low, indigo = medium, marigold = high importance, red = pinned. */
+.mail-row .bar {
+  border-radius: 2px;
+  background: var(--line);
+}
+
+.mail-row.level-medium .bar { background: var(--indigo); }
+.mail-row.level-high .bar { background: var(--marigold); }
+.mail-row.pinned .bar { background: var(--danger); }
+
+/* Sender name and time. */
+.mail-top {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.sender { font-weight: 600; }
+
+.mail-top time {
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Small "Pinned" label. */
+.tag {
+  font-size: 0.8rem;
+  background: var(--marigold);
+  color: var(--marigold-ink);
+  border-radius: 4px;
+  padding: 0 0.4rem;
+}
+
+.subject {
+  display: block;
+  font-weight: 400;
+  text-decoration: none;
+}
+
+.subject:hover { text-decoration: underline; }
+.mail-row.unread .subject { font-weight: 600; }
+
+/* Preview text: one line, or the full text when the row is open. */
+.snippet {
+  margin: 0.15rem 0 0;
+  color: var(--muted);
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.mail-row.open .snippet { -webkit-line-clamp: unset; }
+
+/* Why the mail is ranked as it is; only visible when the row is open. */
+.why {
+  display: none;
+  margin: 0.4rem 0 0;
+  font-size: 0.9rem;
+  color: var(--indigo);
+}
+
+.mail-row.open .why { display: block; }
+
+/* Pin and Done buttons. */
+.row-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.1rem;
+  font-size: 0.95rem;
+}
+
+/* --- News ------------------------------------------------------------ */
+/* Numbered list: the rank number comes from a CSS counter (ol.news > li::before). */
+ol.news {
+  list-style: none;
+  counter-reset: rank;
+  margin: 0;
+  padding: 0;
+}
+
+ol.news > li {
+  counter-increment: rank;
+  display: grid;
+  grid-template-columns: 2rem minmax(0, 1fr) auto;
+  gap: 0.5rem;
+  padding: 0.8rem 0;
+  border-top: 1px solid var(--line);
+}
+
+ol.news > li:first-child { border-top: 0; }
+
+ol.news > li::before {
+  content: counter(rank);
+  font-family: var(--display);
+  font-weight: 600;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Story and paper titles. */
+.headline {
+  font-size: 1.15rem;
+  font-weight: 600;
+  line-height: 1.3;
+  text-decoration: none;
+}
+
+.headline:hover { text-decoration: underline; }
+
+/* Story summary, cut after two lines. */
+.summary-line {
+  margin: 0.2rem 0 0;
+  color: var(--muted);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  max-width: 46rem;
+}
+
+/* Source, time and "also covered by" line. */
+.meta {
+  margin: 0.3rem 0 0;
+  display: flex;
+  gap: 0.2rem 0.9rem;
+  flex-wrap: wrap;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+.meta .source {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+/* --- Papers ---------------------------------------------------------- */
+/* One paper. */
+.paper {
+  padding: 0.8rem 0;
+  border-top: 1px solid var(--line);
+}
+
+.paper:first-child { border-top: 0; }
+.paper .headline { display: block; }
+
+/* Abstract, PDF and Save buttons under a paper. */
+.paper-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-top: 0.2rem;
+  font-size: 0.95rem;
+}
+
+/* Topic label (for example "Low-resource MT"). */
+.topic {
+  background: var(--indigo-soft);
+  color: var(--indigo);
+  border-radius: 4px;
+  padding: 0 0.4rem;
+  font-size: 0.85rem;
+}
+
+/* The abstract, revealed by the Abstract button. */
+.abstract {
+  margin: 0.5rem 0 0;
+  max-width: 46rem;
+  line-height: 1.55;
+}
+
+/* --- Read later ------------------------------------------------------ */
+/* One saved link. */
+.saved-row {
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 0.55rem 0;
+  border-top: 1px solid var(--line);
+}
+
+.saved-row:first-child { border-top: 0; }
+
+
+/* ==========================================================================
+   8. SIDE RAIL
+   The sticky right column: Spotify, focus timer, today's events, tasks.
+   ========================================================================== */
+
+/* The sticky right column. It scrolls inside itself when it is taller than the window. */
+.rail {
+  position: sticky;
+  top: 1.25rem;
+  background: var(--panel);
+  border-radius: 16px;
+  padding: 1.25rem 1.25rem 1.5rem;
+  max-height: 90vh;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line) transparent;
+}
+
+/* Custom Scrollbar for the rail */
+.rail::-webkit-scrollbar { width: 6px; }
+.rail::-webkit-scrollbar-track { background: transparent; }
+
+.rail::-webkit-scrollbar-thumb {
+  background-color: var(--line);
+  border-radius: 10px;
+}
+
+.rail::-webkit-scrollbar-thumb:hover { background-color: var(--muted); }
+
+/* Space and a divider between the blocks of the rail. */
+.rail-block + .rail-block {
+  margin-top: 1.75rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--line);
+}
+
+.rail h2 { margin-bottom: 0.75rem; }
+
+/* --- Spotify (now playing) ------------------------------------------- */
+/* Header row of the card: title on the left, status dot on the right. */
+.spotify-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+/* Status dot: grey normally, Spotify green while playing. */
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--line);
+  transition: background-color 0.3s ease;
+}
+
+.status-dot.active {
+  background: #1DB954;  /* Spotify green */
+  box-shadow: 0 0 8px rgba(29, 185, 84, 0.4);
+}
+
+/* The card that holds the track and the controls. */
+.spotify-card {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/* Album art + track and artist (the whole thing is a link to Spotify). */
+.spotify-content {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  text-decoration: none;
+  color: inherit;
+}
+
+.spotify-art {
+  width: 52px;
+  height: 52px;
+  border-radius: 8px;
+  object-fit: cover;
+  flex-shrink: 0;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+/* Track and artist text; long names are cut with "...". */
+.spotify-meta {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.spotify-track {
+  font-weight: 600;
+  font-size: 0.95rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.spotify-artist {
+  color: var(--muted);
+  font-size: 0.85rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Previous, play/pause and next buttons. */
+.spotify-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  border-top: 1px solid var(--line);
+  padding-top: 0.5rem;
+}
+
+.spotify-btn {
+  background: transparent;
+  border: none;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--indigo);
+  padding: 0.3rem 0.6rem;
+  border-radius: 6px;
+  transition: background-color 0.2s ease;
+}
+
+.spotify-btn:hover { background: var(--panel); }
+
+/* --- Focus timer ----------------------------------------------------- */
+/* The circular progress ring: an SVG circle drawn on top of a track, with the time in the middle. */
+.ring {
+  position: relative;
+  width: 11rem;
+  height: 11rem;
+  margin: 0.25rem auto 1rem;
+}
+
+.ring svg {
+  width: 100%;
+  height: 100%;
+}
+
+.ring .track {
+  fill: none;
+  stroke: var(--line);
+  stroke-width: 7;
+}
+
+.ring .progress {
+  fill: none;
+  stroke: var(--marigold);
+  stroke-width: 7;
+  stroke-linecap: round;
+  stroke-dasharray: 326.73;
+  stroke-dashoffset: 0;
+  transition: stroke-dashoffset 0.25s linear;
+}
+
+/* Breaks are drawn in teal instead of marigold. */
+.ring[data-mode="short"] .progress,
+.ring[data-mode="long"] .progress {
+  stroke: var(--teal);
+}
+
+/* Mode label and digits, centered inside the ring. */
+.ring-text {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.ring-mode {
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.ring-time {
+  font-family: var(--display);
+  font-size: 2.6rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+
+/* Start, Reset and Skip buttons. */
+.timer-actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  margin-top: 0.75rem;
+}
+
+/* The small dots that count focus sessions towards a long break. */
+.dots {
+  display: flex;
+  gap: 0.4rem;
+  justify-content: center;
+  margin-top: 0.9rem;
+}
+
+.dots i {
+  width: 0.6rem;
+  height: 0.6rem;
+  border-radius: 50%;
+  border: 2px solid var(--muted);
+}
+
+.dots i.on {
+  background: var(--marigold);
+  border-color: var(--marigold);
+}
+
+/* "Today: 3 sessions ..." line. */
+#timerStats {
+  text-align: center;
+  margin: 0.5rem 0 0.5rem;
+}
+
+/* Minimalist Dropdown Toggle */
+details summary {
+  cursor: pointer;
+  color: var(--muted);
+  font-weight: 500;
+  list-style: none;  /* Hides default triangle */
+  transition: color 0.2s ease;
+  user-select: none;
+}
+
+details summary::-webkit-details-marker { display: none; }
+
+/* Custom animated triangle */
+details summary::before {
+  content: "▶";
+  display: inline-block;
+  font-size: 0.7em;
+  margin-right: 0.5rem;
+  transition: transform 0.2s ease;
+}
+
+details[open] summary::before { transform: rotate(90deg); }
+details summary:hover { color: var(--ink); }
+
+/* Dropdown Content Box & Animation */
+details[open] summary ~ * { animation: slideDown 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+
+@keyframes slideDown {
+  0% {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* The box that opens under "Timer lengths". */
+.lengths {
+  display: grid;
+  gap: 0.6rem;
+  margin-top: 0.8rem;
+  padding: 1rem;
+  background: var(--panel);
+  border-radius: 8px;
+  border: 1px solid var(--line);
+}
+
+.lengths label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;  /* Spreads text and inputs evenly */
+  gap: 0.5rem;
+}
+
+/* --- Today (calendar events) ----------------------------------------- */
+/* The list of events (used inside #eventsList). */
+#eventsList ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* One event: time on the left, title and place on the right. */
+.event {
+  display: grid;
+  grid-template-columns: 5.6rem minmax(0, 1fr);
+  gap: 0.5rem;
+  padding: 0.45rem 0 0.45rem 0.6rem;
+  border-left: 3px solid transparent;
+}
+
+.event .when {
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.95rem;
+}
+
+.event .what {
+  display: flex;
+  flex-direction: column;
+}
+
+.event.live { border-left-color: var(--marigold); }
+
+.event.live .when {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.event.past { opacity: 0.55; }
+
+/* Ensure the event row allows for right-alignment */
+#eventsList .event {
+  display: flex;
+  align-items: baseline;
+}
+
+#eventsList .controls {
+  margin-left: auto;  /* Pushes the button to the far right */
+}
+
+/* Styled exactly like your other action links (Pin, Done, Save, etc.) */
+#eventsList .controls button {
+  text-decoration: none;
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  font-size: 0.85em;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  opacity: 0;  /* Hidden by default for a clean UI */
+  transition: all 0.2s ease;
+}
+
+/* Reveal the button smoothly when hovering over the specific event */
+#eventsList .event:hover .controls button {
+  opacity: 0.65;  /* Matches the resting state of other buttons */
+}
+
+/* Hover state: clean panel background highlight with your theme's danger red */
+#eventsList .controls button:hover {
+  opacity: 1;
+  background: var(--panel);
+  color: var(--danger);
+  text-decoration: none;  /* Gets rid of the ugly underline */
+}
+
+/* --- Tasks ----------------------------------------------------------- */
+/* The "Add a task" input row. */
+.task-add {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.4rem;
+  margin-bottom: 0.75rem;
+}
+
+.task-add #taskTitle { grid-column: 1 / -1; }
+
+/* The task list. */
+.tasks {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* One task: checkbox | title and due date | buttons. */
+.task {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 0.6rem;
+  align-items: start;
+  padding: 0.35rem 0;
+}
+
+.task input[type="checkbox"] {
+  margin-top: 0.4rem;
+  width: 1.05rem;
+  height: 1.05rem;
+  accent-color: var(--indigo);
+}
+
+.task.done .task-title {
+  text-decoration: line-through;
+  color: var(--muted);
+}
+
+/* Due-date label under the task title (overdue = red, today = bold). */
+.task-due {
+  display: block;
+  font-size: 0.88rem;
+  color: var(--muted);
+}
+
+.task-due.overdue {
+  color: var(--danger);
+  font-weight: 600;
+}
+
+.task-due.today {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+
+/* ==========================================================================
+   9. TOAST AND DIALOG
+   The pop-up message and the "Push to Calendar" dialog.
+   ========================================================================== */
+
+/* Toast: the short message at the bottom of the screen (shown by toast() in app.js). */
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 1.5rem;
+  transform: translateX(-50%);
+  background: var(--ink);
+  color: var(--paper);
+  padding: 0.6rem 1.1rem;
+  border-radius: 8px;
+  max-width: 90vw;
+}
+
+/* The <dialog> that opens from a task's "To Calendar" button. */
+.modal {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 0;
+  background: var(--paper);
+  color: var(--ink);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  max-width: 400px;
+  width: 90vw;
+}
+
+.modal::backdrop {
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(2px);
+}
+
+.modal-content { padding: 1.5rem; }
+
+.modal-header {
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+  font-family: var(--display);
+  font-weight: 600;
+  font-size: 1.4rem;
+}
+
+.modal-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+
+/* ==========================================================================
+   10. FOOTER
+   ========================================================================== */
+
+footer {
+  /* Using var(--muted) ensures the text adapts perfectly to both light and dark themes */
+  color: var(--muted);
+}
+
+
+/* ==========================================================================
+   11. SMALL SCREENS AND REDUCED MOTION
+   Kept last on purpose: these rules must come after the normal ones so they can override them.
+   ========================================================================== */
+
+/* Below 1100px there is no room to keep the greeting beside the weather, so the weather goes underneath. */
+@media (max-width: 1100px) {
+  .masthead { grid-template-columns: 1fr; }
+
+  .masthead-side {
+    align-items: flex-start;
+    text-align: left;
+  }
+
+  .weather { grid-template-columns: auto auto 1fr; }  /* temperature sits at the left edge when stacked */
+  .weather .temp { grid-column: 1; }
+  .weather .wx-desc { grid-column: 2; }
+  .tools { justify-content: flex-start; }
+}
+/* clock */
+/* Minimalist Digital Clock */
+.clock {
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: var(--ink); /* Matches your current text theme */
+  letter-spacing: -0.5px;
+  font-variant-numeric: tabular-nums; /* Keeps numbers from shifting width */
+}
+/* Below 900px the layout becomes one column. */
+@media (max-width: 900px) {
+  .layout {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .rail { position: static; }
+}
+
+/* For people who ask their system for less animation: turn all transitions and animations off. */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
+}
