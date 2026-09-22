@@ -1072,6 +1072,11 @@ async function start() {
   let fitTimer;
   window.addEventListener("resize", () => { clearTimeout(fitTimer); fitTimer = setTimeout(fitGreeting, 120); });
 
+  // Add auto-rotation for the greeting every 10 seconds without refreshing the whole page
+  setInterval(() => {
+    showGreeting(greetingIndex + 1, true);
+  }, 5000);
+
   // 3. controls: mail tabs, refresh, tasks, calendar dialog, menu
   document.querySelectorAll("[data-mail-mode]").forEach((b) =>
     b.addEventListener("click", () => { mailMode = b.dataset.mailMode; if (S.mail) renderMail(); })
