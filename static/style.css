@@ -3,17 +3,17 @@
    --------------------------------------------------------------------------
    Sections follow the page from top to bottom:
 
-    1. DESIGN TOKENS                     Colors and fonts (light and dark theme)
-    2. BASE                              Page defaults and helper classes
-    3. SHARED COMPONENTS                 Buttons, chips, links, form fields, panel parts
-    4. SIDE DRAWER (QUICK LINKS)         Quick Links drawer and the menu button
-    5. HEADER                            Greeting, date, weather, tools, summary sentence
-    6. PAGE LAYOUT                       The grid under the header
-    7. MAIN COLUMN                       Mail, news, papers, read later
-    8. SIDE RAIL                         Sticky right column: Spotify, focus timer, today, tasks
-    9. TOAST AND DIALOG                  Message pop-up and Push to Calendar dialog
-   10. FOOTER                            Footer text
-   11. SMALL SCREENS AND REDUCED MOTION  Responsive rules and reduced motion (kept last so they win)
+    1. DESIGN TOKENS                    Colors and fonts (light and dark theme)
+    2. BASE                             Page defaults and helper classes
+    3. SHARED COMPONENTS                Buttons, chips, links, form fields, panel parts
+    4. SIDE DRAWER (QUICK LINKS)        Quick Links drawer and the menu button
+    5. HEADER                           Greeting, date, weather, tools, summary sentence
+    6. PAGE LAYOUT                      The grid under the header
+    7. MAIN COLUMN                      Mail, news, papers, read later
+    8. SIDE RAIL                        Sticky right column: Spotify, focus timer, today, tasks
+    9. TOAST AND DIALOG                 Message pop-up and Push to Calendar dialog
+   10. FOOTER                           Footer text
+   11. SMALL SCREENS AND REDUCED MOTION Responsive rules and reduced motion (kept last so they win)
    ========================================================================== */
 
 
@@ -35,6 +35,7 @@
   --marigold-ink: #1B1400;
   --teal: #14766A;
   --danger: #B3261E;
+  --heatmap-empty: #d2dae5; /* The soft grey for light mode */
   --gutter: clamp(1rem, 4vw, 3rem);
   --display: "Bricolage Grotesque", "Noto Sans Devanagari", "Noto Sans Thai", "Nirmala UI", "Leelawadee UI", system-ui, sans-serif;
   --body: "Source Sans 3", "Segoe UI", system-ui, "Noto Sans Devanagari", "Noto Sans Thai", sans-serif;
@@ -55,6 +56,7 @@
     --teal: #4FC3B0;
     --danger: #FF8A80;
     color-scheme: dark;
+    --heatmap-empty: #2a2b36; /* The dark square for dark mode */
   }
 }
 
@@ -858,8 +860,8 @@ ol.news > li::before {
 
 
 /* ==========================================================================
-   8. SIDE RAIL
-   The sticky right column: Spotify, focus timer, today's events, tasks.
+   8. SIDE RAIL: FOCUS TIMER
+   The sticky right column: Spotify, focus timer, heatmap, today's events, tasks.
    ========================================================================== */
 
 /* The sticky right column. It scrolls inside itself when it is taller than the window. */
@@ -1086,6 +1088,60 @@ ol.news > li::before {
   text-align: center;
   margin: 0.5rem 0 0.5rem;
 }
+
+/* --- Focus Heatmap --- */
+/* --- Focus Heatmap --- */
+/* Container for the entire heatmap widget */
+.heatmap-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+/* Month labels row */
+.heatmap-months {
+    display: grid;
+    grid-auto-flow: column;
+    gap: 4px; /* Must match your .heatmap-grid gap */
+    font-size: 0.85rem;
+    color: var(--muted);
+    height: 1.2rem;
+    margin-bottom: 2px;
+}
+
+.heatmap-month-label {
+    white-space: nowrap;
+    font-weight: 500;
+}
+.heatmap-grid {
+    display: grid;
+    grid-template-rows: repeat(7, 1fr);
+    grid-auto-flow: column;
+    gap: 4px;
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+    overflow-x: auto; /* Allows you to scroll horizontally through all past months */
+    padding-bottom: 4px; /* Space for a clean scrollbar if needed */
+}
+
+.heatmap-cell {
+  aspect-ratio: 1;
+  border-radius: 2px;
+  background: var(--heatmap-empty); /* Uses the dynamic variable */
+  transition: opacity 0.2s;
+  cursor: default;
+}
+
+.heatmap-cell:hover {
+  opacity: 0.8;
+}
+
+/* Yellow tint scale matching the Focus Ring */
+.heatmap-cell[data-level="1"] { background: #5e4a15; } /* < 30 mins */
+.heatmap-cell[data-level="2"] { background: #967417; } /* < 60 mins */
+.heatmap-cell[data-level="3"] { background: #d6a315; } /* < 120 mins */
+.heatmap-cell[data-level="4"] { background: #ffc107; } /* Deep Work 120+ */
+
 
 /* Minimalist Dropdown Toggle */
 details summary {

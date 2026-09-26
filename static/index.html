@@ -9,7 +9,7 @@
     1. Side drawer (Quick Links)
     2. Header: menu button, greeting, clock, date, weather, tools
     3. Demo banner and summary sentence
-    4. Main column: mail, news, papers, read later
+    4. Main column: mail, news, papers, trending, read later
     5. Side rail: Spotify, focus timer, today's events, tasks
     6. Toast message, "Push to Calendar" dialog, footer
 -->
@@ -138,13 +138,22 @@
         <p id="newsFoot" class="foot muted"></p>
       </section>
 
-      <!-- Latest papers on your research topics (arXiv) -->
+      <!-- Latest papers on your research topics -->
       <section class="block" aria-labelledby="papersTitle">
         <header class="block-head">
           <h2 id="papersTitle">New papers</h2>
         </header>
         <div id="papersList"></div>
         <p id="papersFoot" class="foot muted"></p>
+      </section>
+      
+      <!-- Trending papers from the last 60 days -->
+      <section class="block" aria-labelledby="trendingTitle">
+        <header class="block-head">
+          <h2 id="trendingTitle">🔥 Trending Papers</h2>
+        </header>
+        <div id="trendingList"></div>
+        <p id="trendingFoot" class="foot muted"></p>
       </section>
 
       <!-- Links saved with the Save buttons of news stories and papers -->
@@ -194,16 +203,23 @@
           <button id="timerReset" class="btn" type="button">Reset</button>
           <button id="timerSkip" class="btn" type="button">Skip</button>
         </div>
-        <div id="timerDots" class="dots" aria-hidden="true"></div>
+       <div id="timerDots" class="dots" aria-hidden="true"></div>
         <p id="timerStats" class="muted small"></p>
-        <details class="small">
-          <summary>Timer lengths</summary>
-          <div class="lengths">
-            <label>Focus <input id="lenFocus" class="field num" type="number" min="1" max="120"> min</label>
-            <label>Short break <input id="lenShort" class="field num" type="number" min="1" max="60"> min</label>
-            <label>Long break <input id="lenLong" class="field num" type="number" min="1" max="90"> min</label>
-          </div>
-        </details>
+        
+        <!-- NEW: 12-Week Heatmap Container -->
+<div class="heatmap-container">
+    <div id="heatmapMonths" class="heatmap-months"></div>
+    <div id="focusHeatmap" class="heatmap-grid" aria-hidden="true"></div>
+    
+    <details class="small">
+      <summary>Timer lengths</summary>
+      <div class="lengths">
+        <label>Focus <input id="lenFocus" class="field num" type="number" min="1" max="120"> min</label>
+        <label>Short break <input id="lenShort" class="field num" type="number" min="1" max="60"> min</label>
+        <label>Long break <input id="lenLong" class="field num" type="number" min="1" max="90"> min</label>
+      </div>
+    </details>
+</div>
       </section>
 
       <!-- Today: Google Calendar events for today (filled by loadEvents) -->

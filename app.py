@@ -10,10 +10,10 @@ import sys
 import threading
 import time
 import webbrowser
+from datetime import datetime, timedelta
 from pathlib import Path
 from urllib.parse import urlparse
 from google_data import fetch_messages, todays_events, add_task_to_calendar, delete_calendar_event
-
 
 from flask import Flask, abort, jsonify, request, send_from_directory
 
@@ -23,6 +23,9 @@ from google_auth import SetupNeeded
 
 BASE = Path(__file__).parent
 DEMO = os.environ.get("DEMO") == "1" or "--demo" in sys.argv
+
+# File to explicitly store focus heatmap history 
+FOCUS_FILE = BASE / "data" / "focus.json"
 
 
 def load_config():
@@ -243,6 +246,7 @@ def api_papers():
         return jsonify(status="disabled")
     import papers
     import demo
+    # Wrap the builder in the cached decorator (uses cache_minutes configuration)
     return respond("Papers", "papers", lambda: papers.build(CFG["papers"]), demo.papers)
 
 
@@ -374,9 +378,42 @@ def api_spotify_toggle():
 
 # ---------------------------------------------------------------- focus timer
 
+def _load_focus_history():
+    """Helper to safely load the focus heatmap JSON."""
+    if FOCUS_FILE.exists():
+        try:
+            with open(FOCUS_FILE, "r") as f:
+                return json.load(f)
+        except json.JSONDecodeError:
+            pass
+    return {}
+
+def _save_focus_history(history):
+    """Helper to safely save the focus heatmap JSON."""
+    FOCUS_FILE.parent.mkdir(parents=True, exist_ok=True)
+    with open(FOCUS_FILE, "w") as f:
+        json.dump(history, f)
+
+
 @app.get("/api/focus")
 def api_focus():
-    return jsonify(store.focus_today())
+    history = _load_focus_history()
+    today = datetime.now().strftime("%Y-%m-%d")
+    
+    # 84 days = exactly 12 weeks of historical data for the grid
+    cutoff = datetime.now() - timedelta(days=84)
+    heatmap_data = {
+        date: stats["minutes"] 
+        for date, stats in history.items() 
+        if datetime.strptime(date, "%Y-%m-%d") >= cutoff
+    }
+    
+    today_stats = history.get(today, {"sessions": 0, "minutes": 0})
+    return jsonify(
+        sessions=today_stats["sessions"], 
+        minutes=today_stats["minutes"], 
+        history=heatmap_data
+    )
 
 
 @app.post("/api/focus")
@@ -388,8 +425,35 @@ def api_focus_log():
         minutes = 0
     if not 1 <= minutes <= 180:
         abort(400, "Minutes must be between 1 and 180.")
+        
+    # Log to sqlite (legacy / internal tracking)
     store.log_focus(minutes, str(data.get("label", "")).strip()[:80])
-    return jsonify(store.focus_today()), 201
+    
+    # Update JSON for heatmap visualization
+    history = _load_focus_history()
+    today = datetime.now().strftime("%Y-%m-%d")
+    
+    if today not in history:
+        history[today] = {"sessions": 0, "minutes": 0}
+        
+    history[today]["sessions"] += 1
+    history[today]["minutes"] += minutes
+    
+    _save_focus_history(history)
+
+    # Return updated state immediately so UI reacts
+    cutoff = datetime.now() - timedelta(days=84)
+    heatmap_data = {
+        date: stats["minutes"] 
+        for date, stats in history.items() 
+        if datetime.strptime(date, "%Y-%m-%d") >= cutoff
+    }
+
+    return jsonify(
+        sessions=history[today]["sessions"], 
+        minutes=history[today]["minutes"], 
+        history=heatmap_data
+    ), 201
 
 
 # ---------------------------------------------------------------- start

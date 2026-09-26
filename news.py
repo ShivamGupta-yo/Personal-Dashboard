@@ -17,7 +17,7 @@ from datetime import datetime
 import feedparser
 import requests
 
-UA = "Mozilla/5.0 (compatible; MorningBrief/1.0; personal local use)"
+UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
 TAGS = re.compile(r"<[^>]+>")
 STOPWORDS = set(
     "the a an of to in on for and or at is are was were be by with from as it its that this "
@@ -41,7 +41,7 @@ def _similar(a, b):
 
 
 def _fetch_feed(feed, per_feed, max_age_hours):
-    resp = requests.get(feed["url"], headers={"User-Agent": UA}, timeout=8)
+    resp = requests.get(feed["url"], headers={"User-Agent": UA}, timeout=20)
     resp.raise_for_status()
     parsed = feedparser.parse(resp.content)
     if not parsed.entries:

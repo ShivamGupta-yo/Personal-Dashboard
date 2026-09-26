@@ -503,43 +503,72 @@ function renderNews() {
 }
 
 /* -------------------------------------------------------------------------- */
-/* 6. MAIN COLUMN: PAPERS                                                     */
+/* 6. MAIN COLUMN: PAPERS & TRENDING                                          */
 /* -------------------------------------------------------------------------- */
 
-/** Fetches /api/papers and draws the list; each paper has an Abstract toggle, a PDF link and a Save button. */
-async function loadPapers(refresh) {
-  const box = $("#papersList");
-  if (!$("#papersList").children.length) box.replaceChildren(h("p", { class: "muted", text: "Loading papers…" }));
-  const data = await api("/api/papers" + (refresh ? "?refresh=1" : ""));
-  if (panelStatus(box, data, () => loadPapers(true))) return;
+/** 
+ * Helper function to create the DOM nodes for a single paper.
+ * Shared by both the Latest Papers and Trending Papers lists.
+ */
+function createPaperNode(p) {
+  const abstract = h("p", { class: "abstract", hidden: true, text: p.abstract });
+  const toggle = h("button", { class: "link", type: "button", "aria-expanded": "false", text: "Abstract",
+    onclick: (e) => {
+      const opening = abstract.hidden;
+      abstract.hidden = !opening;
+      e.currentTarget.setAttribute("aria-expanded", String(opening));
+      e.currentTarget.textContent = opening ? "Hide abstract" : "Abstract";
+    } });
+  const authors = p.authors.slice(0, 3).join(", ") + (p.authors.length > 3 ? " and others" : "");
+  
+  // Format the citations string specifically if this is a trending paper
+  const citationText = p.cited_by_count > 0 ? ` • ${p.cited_by_count} Citations` : "";
 
-  box.replaceChildren();
-  if (!data.papers.length) box.append(h("p", { class: "muted empty", text: "No new papers found for your topics." }));
-  data.papers.forEach((p) => {
-    const abstract = h("p", { class: "abstract", hidden: true, text: p.abstract });
-    const toggle = h("button", { class: "link", type: "button", "aria-expanded": "false", text: "Abstract",
-      onclick: (e) => {
-        const opening = abstract.hidden;
-        abstract.hidden = !opening;
-        e.currentTarget.setAttribute("aria-expanded", String(opening));
-        e.currentTarget.textContent = opening ? "Hide abstract" : "Abstract";
-      } });
-    const authors = p.authors.slice(0, 3).join(", ") + (p.authors.length > 3 ? " and others" : "");
-    box.append(
-      h("article", { class: "paper" },
-        h("a", { class: "headline", href: p.url, target: "_blank", rel: "noopener", text: p.title }),
-        h("p", { class: "meta" },
-          h("span", { text: authors }),
-          h("span", { text: p.published }),
-          ...p.topics.map((t) => h("span", { class: "topic", text: t }))),
-        h("div", { class: "paper-actions" },
-          toggle,
-          p.pdf && h("a", { class: "link", href: p.pdf, target: "_blank", rel: "noopener", text: "PDF" }),
-          saveButton("paper", p, "arXiv")),
-        abstract)
-    );
-  });
-  $("#papersFoot").textContent = data.warnings.length ? `Some topics failed: ${data.warnings.join("; ")}` : "";
+  return h("article", { class: "paper" },
+    h("a", { class: "headline", href: p.url, target: "_blank", rel: "noopener", text: p.title }),
+    h("p", { class: "meta" },
+      h("span", { text: authors }),
+      h("span", { text: p.published + citationText }),
+      ...p.topics.map((t) => h("span", { class: "topic", text: t }))),
+    h("div", { class: "paper-actions" },
+      toggle,
+      p.pdf && h("a", { class: "link", href: p.pdf, target: "_blank", rel: "noopener", text: "PDF" }),
+      saveButton("paper", p, "OpenAlex")),
+    abstract
+  );
+}
+
+/** Fetches /api/papers and draws both the Latest and Trending lists. */
+async function loadPapers(refresh) {
+  const latestBox = $("#papersList");
+  const trendingBox = $("#trendingList");
+  
+  if (!latestBox.children.length) {
+    latestBox.replaceChildren(h("p", { class: "muted", text: "Loading papers…" }));
+    if(trendingBox) trendingBox.replaceChildren(h("p", { class: "muted", text: "Loading trending…" }));
+  }
+  
+  const data = await api("/api/papers" + (refresh ? "?refresh=1" : ""));
+  if (panelStatus(latestBox, data, () => loadPapers(true))) return;
+
+  // --- Render Latest Papers ---
+  latestBox.replaceChildren();
+  if (!data.papers || !data.papers.length) {
+    latestBox.append(h("p", { class: "muted empty", text: "No new papers found for your topics." }));
+  } else {
+    data.papers.forEach((p) => latestBox.append(createPaperNode(p)));
+  }
+  $("#papersFoot").textContent = data.warnings && data.warnings.length ? `Some topics failed: ${data.warnings.join("; ")}` : "";
+
+  // --- Render Trending Papers ---
+  if(trendingBox) {
+    trendingBox.replaceChildren();
+    if (!data.trending || !data.trending.length) {
+      trendingBox.append(h("p", { class: "muted empty", text: "No trending papers found right now." }));
+    } else {
+      data.trending.forEach((p) => trendingBox.append(createPaperNode(p)));
+    }
+  }
 }
 
 /* -------------------------------------------------------------------------- */
@@ -745,17 +774,93 @@ function notify(message) {
   if ("Notification" in window && Notification.permission === "granted") new Notification("Morning brief", { body: message });
 }
 
-/** Loads today's focus sessions from the server (/api/focus) and shows the totals. */
+/** Loads today's focus sessions and historical heatmap data from the server. */
 async function loadFocusStats() {
   const data = await api("/api/focus");
   if (data.error) return;
+  
   timer.sessionsToday = data.sessions;
   $("#timerStats").textContent = data.sessions
     ? `Today: ${data.sessions} ${data.sessions === 1 ? "session" : "sessions"}, ${data.minutes} min focused`
     : "No focus sessions yet today.";
+    
+  if (data.history) renderHeatmap(data.history);
+  
   renderTimer();
 }
 
+/** Draws the 12-week GitHub-style heatmap. */
+function renderHeatmap(history) {
+  const grid = $("#focusHeatmap");
+  const monthsContainer = $("#heatmapMonths");
+  if (!grid) return;
+
+  const today = new Date();
+  const historyDates = Object.keys(history);
+  let daysBack = 70; 
+  
+  if (historyDates.length > 0) {
+    historyDates.sort();
+    const earliestDate = new Date(historyDates[0]);
+    const diffTime = Math.abs(today - earliestDate);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    daysBack = Math.max(70, Math.ceil(diffDays / 7) * 7);
+  }
+
+  const totalWeeks = daysBack / 7;
+  
+  // Set the month container's columns to match the heatmap grid column count
+  if (monthsContainer) {
+    monthsContainer.style.gridTemplateColumns = `repeat(${totalWeeks}, 1fr)`;
+  }
+
+  const days = [];
+  const weekLabels = new Array(totalWeeks).fill("");
+  const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const seenMonths = new Set();
+
+  for (let i = daysBack - 1; i >= 0; i--) {
+    const d = new Date(today);
+    d.setDate(today.getDate() - i);
+    
+    const weekIndex = Math.floor((daysBack - 1 - i) / 7);
+    const dayOfWeek = d.getDay(); // 0 = Sunday
+    
+    // Place month label on the first column of the week when a new month starts
+    if (dayOfWeek === 0) {
+      const m = d.getMonth();
+      if (!seenMonths.has(m) && d.getDate() <= 7) {
+        weekLabels[weekIndex] = monthNames[m];
+        seenMonths.add(m);
+      }
+    }
+
+    const dateStr = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+    const mins = history[dateStr] || 0;
+    let level = 0;
+    if (mins > 0 && mins < 30) level = 1;
+    else if (mins >= 30 && mins < 60) level = 2;
+    else if (mins >= 60 && mins < 120) level = 3;
+    else if (mins >= 120) level = 4;
+
+    const cell = h("div", {
+      class: "heatmap-cell",
+      "data-level": level,
+      title: mins === 0 ? `No focus on ${dateStr}` : `${mins} min on ${dateStr}`
+    });
+    days.push(cell);
+  }
+
+  // Create a span slot for every single week column so alignment is pixel-perfect
+  const monthLabelElements = weekLabels.map(label => 
+    h("span", { class: "heatmap-month-label" }, label)
+  );
+  
+  grid.replaceChildren(...days);
+  if (monthsContainer) {
+    monthsContainer.replaceChildren(...monthLabelElements);
+  }
+}
 /**
  * Called when the countdown reaches zero: beeps, notifies, logs a finished focus session on the server
  * and moves on to the next mode (a long break after every Nth focus session, otherwise a short break).
