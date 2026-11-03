@@ -797,36 +797,45 @@ function renderHeatmap(history) {
 
   const today = new Date();
   const historyDates = Object.keys(history);
-  let daysBack = 70; 
   
+  // Calculate total weeks needed to show all history (minimum 10 weeks)
+  let totalWeeks = 10; 
   if (historyDates.length > 0) {
     historyDates.sort();
     const earliestDate = new Date(historyDates[0]);
     const diffTime = Math.abs(today - earliestDate);
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    daysBack = Math.max(70, Math.ceil(diffDays / 7) * 7);
+    totalWeeks = Math.max(10, Math.ceil(diffDays / 7));
   }
 
-  const totalWeeks = daysBack / 7;
-  
-  // Set the month container's columns to match the heatmap grid column count
   if (monthsContainer) {
     monthsContainer.style.gridTemplateColumns = `repeat(${totalWeeks}, 1fr)`;
   }
 
+  // 1. Find the Sunday of the CURRENT week
+  const currentSunday = new Date(today);
+  currentSunday.setDate(today.getDate() - today.getDay()); 
+  
+  // 2. Set the start date to exactly 'totalWeeks' prior to this Sunday
+  const startDate = new Date(currentSunday);
+  startDate.setDate(currentSunday.getDate() - ((totalWeeks - 1) * 7));
+
+  const totalDays = totalWeeks * 7;
   const days = [];
+  
   const weekLabels = new Array(totalWeeks).fill("");
   const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
   const seenMonths = new Set();
 
-  for (let i = daysBack - 1; i >= 0; i--) {
-    const d = new Date(today);
-    d.setDate(today.getDate() - i);
+  // Loop forward chronologically through every day
+  for (let i = 0; i < totalDays; i++) {
+    const d = new Date(startDate);
+    d.setDate(startDate.getDate() + i);
     
-    const weekIndex = Math.floor((daysBack - 1 - i) / 7);
+    const weekIndex = Math.floor(i / 7);
     const dayOfWeek = d.getDay(); // 0 = Sunday
-    
-    // Place month label on the first column of the week when a new month starts
+
+    // Month label tracking on Sundays
     if (dayOfWeek === 0) {
       const m = d.getMonth();
       if (!seenMonths.has(m) && d.getDate() <= 7) {
@@ -835,8 +844,14 @@ function renderHeatmap(history) {
       }
     }
 
-    const dateStr = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+    // Safely format the date string
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    const dateStr = `${y}-${m}-${day}`;
+    
     const mins = history[dateStr] || 0;
+    
     let level = 0;
     if (mins > 0 && mins < 30) level = 1;
     else if (mins >= 30 && mins < 60) level = 2;
@@ -848,14 +863,16 @@ function renderHeatmap(history) {
       "data-level": level,
       title: mins === 0 ? `No focus on ${dateStr}` : `${mins} min on ${dateStr}`
     });
+
     days.push(cell);
   }
 
-  // Create a span slot for every single week column so alignment is pixel-perfect
+  // Create the month labels
   const monthLabelElements = weekLabels.map(label => 
     h("span", { class: "heatmap-month-label" }, label)
   );
   
+  // Render to DOM
   grid.replaceChildren(...days);
   if (monthsContainer) {
     monthsContainer.replaceChildren(...monthLabelElements);
